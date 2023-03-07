@@ -6,6 +6,8 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors());
+// to receive sent data we should use this middleware
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -22,9 +24,9 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    const serviceCollection = client
-      .db("geniusCar")
-      .collection("serviceCollection");
+    const database = client.db("geniusCar");
+    const serviceCollection = database.collection("serviceCollection");
+    const ordersCollection = database.collection("ordersCollection");
 
     app.get("/services", async (req, res) => {
       const query = {};
@@ -38,6 +40,14 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const service = await serviceCollection.findOne(query);
       res.send(service);
+    });
+
+    app.post("/checkout", async (req, res) => {
+      const order = req.body;
+      const insertOrder = await ordersCollection.insertOne(order);
+      res.send({
+        status: "success",
+      });
     });
   } finally {
   }
